@@ -1,6 +1,7 @@
 import User from "../Models/userModel.js";
 import asyncHandler from "../Middlewares/asynchandler.js";
 import bcrypt from "bcryptjs"
+import createToken from "../Utils/createToken.js"
 
 const createUser = asyncHandler(async (req, res) => {
     const { username, password, email,userInterest } = req.body;
@@ -17,7 +18,9 @@ const createUser = asyncHandler(async (req, res) => {
     
     const newUser = new User({ username, email, password:hashedPassword, userInterest })
     try {
-        await newUser.save()
+        await newUser.save();
+        createToken(res, newUser._id);
+        
         res.status(201).json({_id:newUser._id,email:newUser.email,username:newUser.username,password:newUser._id, userInterest:newUser.userInterest})
     } catch (error) {
         res.status(400)
