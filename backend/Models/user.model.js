@@ -26,22 +26,15 @@ const UserSchema = new Schema({
   },
   role: {
     type: String,
-    enum: ['Student', 'Professional'],
+    enum: ['Leader', 'teamMember'],
     required: true,
+    default: 'teamMember',
   },
   projects: [{
     type: Schema.Types.ObjectId,
     ref: 'Project',
     default: [],
   }],
-  isActive: {
-    type: Boolean,
-    default: true,
-  },
-  isVerified: {
-    type: Boolean,
-    default: false,
-  },
 }, {
   timestamps: true,
 });
@@ -60,30 +53,30 @@ UserSchema.methods.isPasswordCorrect = async function(candidatePassword) {
 
 // Generate Access Token
 UserSchema.methods.generateAccessToken = function() {
-    return jwt.sign(
-        {
-            _id: this._id,
-            email: this.email,
-            username: this.username,
-        },
-        process.env.ACCESS_TOKEN_SECRET,
-        {
-            expiresIn: process.env.ACCESS_TOKEN_EXPIRY
-        }
-    );
+  return jwt.sign(
+    {
+      _id: this._id,
+      email: this.email,
+      username: this.username,
+    },
+    process.env.ACCESS_TOKEN_SECRET,
+    {
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRY
+    }
+  );
 };
 
 // Generate Refresh Token
 UserSchema.methods.generateRefreshToken = function() {
-    return jwt.sign(
-        {
-            _id: this._id,
-        },
-        process.env.REFRESH_TOKEN_SECRET,
-        {
-            expiresIn: process.env.REFRESH_TOKEN_EXPIRY
-        }
-    );
+  return jwt.sign(
+    {
+      _id: this._id,
+    },
+    process.env.REFRESH_TOKEN_SECRET,
+    {
+      expiresIn: process.env.REFRESH_TOKEN_EXPIRY
+    }
+  );
 };
 
 export const User = model('User', UserSchema);

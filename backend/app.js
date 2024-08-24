@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
-import userRouter from "./Routes/userRoutes.js";
+import userRouter from "./Routes/user.router.js";
 
 dotenv.config(); // Load environment variables
 
@@ -24,5 +24,6 @@ app.get("/test", (req, res) => {
 
 // Routing
 app.use("/api/v1/users", userRouter); // Use userRouter for user-related routes
+app.use("./api/v1/project",projectRouter)
 
 export default app;
