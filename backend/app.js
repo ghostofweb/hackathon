@@ -1,24 +1,28 @@
-import express from "express"
-import cors from 'cors';
-import cookieParser from 'cookie-parser';
-import dotenv from 'dotenv';
+import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import dotenv from "dotenv";
+import userRouter from "./Routes/userRoutes.js";
 
-//app.use() is mostly used for middleware configration
+dotenv.config(); // Load environment variables
+
 const app = express();
 
 app.use(cors({
-    origin:process.env.CORS_ORIGIN,  // we can configure cors like their origin and credentail
-    // we can see the attributes with ctrl+space
-    credentials:true,
-}))
+    origin: process.env.CORS_ORIGIN,
+    credentials: true,
+}));
 
-app.use(express.json({limit:"16kb"})) //express.json() let us configure to take json file and also give limit to it
-app.use(express.urlencoded({extended:true,limit:"16kb"})) //making the url encoded
-app.use(express.static("public"))
+app.use(express.json({ limit: "16kb" }));
+app.use(express.urlencoded({ extended: true, limit: "16kb" }));
+app.use(express.static("public"));
+app.use(cookieParser());
 
-app.use(cookieParser())
-app.get("/test",(req,res)=>{
-    res.send("hello world")
-})
+app.get("/test", (req, res) => {
+    res.send("hello world");
+});
 
-export {app} ;
+// Routing
+app.use("/api/v1/users", userRouter); // Use userRouter for user-related routes
+
+export default app;

@@ -1,13 +1,11 @@
 import dotenv from "dotenv" // although we cant use it directly , we have to make some changes in script
 import mongoose from "mongoose"
 import connectDB from "./Config/index.js";
-import {app} from "./app.js";
+import app from "./app.js";
+
 
 dotenv.config({
-    path:'./.env'
-})
-dotenv.config({
-    path:'./.env'
+    path:'../.env'
 })
 connectDB()
 .then(()=>{

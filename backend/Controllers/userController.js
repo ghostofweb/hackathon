@@ -1,31 +1,88 @@
-import User from "../Models/userModel.js";
-import asyncHandler from "../Middlewares/asynchandler.js";
-import bcrypt from "bcryptjs"
-import createToken from "../Utils/createToken.js"
+import { User } from "../Models/userModel.js";
+import asyncHandler from "../Utils/asyncHandler.js";
+import ApiError from "../Utils/ApiError.js";
+import uploadOnCloudinary from "../Utils/cloudinary.js";
 
 const createUser = asyncHandler(async (req, res) => {
-    const { username, password, email,userInterest } = req.body;
+    const { username, password, email } = req.body;
 
-    if (!username || !email || !password || !userInterest) {
-        throw new Error("please fill all the input.")
+    if ([email, username, password].some((field) => field?.trim() === "")) {
+        throw new ApiError(400, "Please fill all the fields");
     }
 
-    const userExists = await User.findOne({ email })
-    if (userExists) res.status(400).send("User already exists")
-    
-    const salt = await bcrypt.genSalt(10)
-    const hashedPassword = await bcrypt.hash(password,salt)
-    
-    const newUser = new User({ username, email, password:hashedPassword, userInterest })
+    const existedUser = await User.findOne({
+        $or: [{ username }, { email }]
+    });
+
+    if (existedUser) {
+        throw new ApiError(400, "Username or Email already taken");
+    }
+
+    const avatarLocalPath = req.files?.avatar?.[0]?.path;
+
+    if (!avatarLocalPath) {
+        throw new ApiError(400, "Avatar is required");
+    }
+
+    const avatar = await uploadOnCloudinary(avatarLocalPath);
+
+    if (!avatar) {
+        throw new ApiError(400, "Avatar upload failed");
+    }
+
+    // Create new user instance and save
+    const user = new User({
+        username,
+        email,
+        password,
+        avatar: avatar?.url, // Ensure this is the correct property
+    });
+
+    await user.save(); // Ensure the user is saved to the database
+
+    const createdUser = await User.findById(user._id).select(
+        "-password -refreshToken" // Exclude sensitive fields
+    );
+
+    if (!createdUser) {
+        throw new ApiError(500, "Something went wrong while registering user");
+    }
+
+    return res.status(201).json({
+        status: 200,
+        data: createdUser,
+        message: "User registered successfully"
+    });
+});
+
+const generateAccessAndRefreshTokens = async (userId) => {
     try {
-        await newUser.save();
-        createToken(res, newUser._id);
-        
-        res.status(201).json({_id:newUser._id,email:newUser.email,username:newUser.username,password:newUser._id, userInterest:newUser.userInterest})
-    } catch (error) {
-        res.status(400)
-        throw new Error("Invalid user data")
-    }
-})
+        const user = await User.findById(userId);
+        if (!user) {
+            console.error(`User with ID ${userId} not found`);
+            throw new ApiError(404, "User not found");
+        }
 
-export {createUser}
+        console.log("User found:", user);
+
+        const accessToken = user.generateAccessToken();
+        const refreshToken = user.generateRefreshToken();
+
+        console.log("Generated Access Token:", accessToken);
+        console.log("Generated Refresh Token:", refreshToken);
+
+        user.refreshToken = refreshToken;
+        await user.save({ validateBeforeSave: false }); // we dont want to save things again
+        // we just want to update the refresh token 
+
+        return { accessToken, refreshToken };
+    } catch (error) {
+        console.error("Error generating tokens:", error.message, error.stack);
+        throw new ApiError(500, "Something went wrong while generating refresh and access token");
+    }
+};
+
+export { createUser
+    ,generateAccessAndRefreshTokens
+    
+ };
