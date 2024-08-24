@@ -4,10 +4,14 @@ import ApiError from "../Utils/ApiError.js";
 import uploadOnCloudinary from "../Utils/cloudinary.js";
 
 const createUser = asyncHandler(async (req, res) => {
-    const { username, password, email } = req.body;
+    const { username, password, email, role } = req.body;
 
-    if ([email, username, password].some((field) => field?.trim() === "")) {
+    if ([email, username, password, role].some((field) => field?.trim() === "")) {
         throw new ApiError(400, "Please fill all the fields");
+    }
+
+    if (!['Student', 'Professional'].includes(role)) {
+        throw new ApiError(400, "Invalid role specified");
     }
 
     const existedUser = await User.findOne({
@@ -35,13 +39,14 @@ const createUser = asyncHandler(async (req, res) => {
         username,
         email,
         password,
-        avatar: avatar?.url, // Ensure this is the correct property
+        avatar: avatar?.url,
+        role
     });
 
-    await user.save(); // Ensure the user is saved to the database
+    await user.save();
 
     const createdUser = await User.findById(user._id).select(
-        "-password -refreshToken" // Exclude sensitive fields
+        "-password -refreshToken"
     );
 
     if (!createdUser) {
@@ -72,8 +77,7 @@ const generateAccessAndRefreshTokens = async (userId) => {
         console.log("Generated Refresh Token:", refreshToken);
 
         user.refreshToken = refreshToken;
-        await user.save({ validateBeforeSave: false }); // we dont want to save things again
-        // we just want to update the refresh token 
+        await user.save({ validateBeforeSave: false });
 
         return { accessToken, refreshToken };
     } catch (error) {
@@ -82,7 +86,4 @@ const generateAccessAndRefreshTokens = async (userId) => {
     }
 };
 
-export { createUser
-    ,generateAccessAndRefreshTokens
-    
- };
+export { createUser, generateAccessAndRefreshTokens };

@@ -1,8 +1,8 @@
 import { Schema, model } from 'mongoose';
-import bcrypt from 'bcryptjs'; // Import bcryptjs as default
-import jwt from 'jsonwebtoken'; // Import jwt for token handling
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
-const { hash, compare } = bcrypt; // Destructure hash and compare from bcrypt
+const { hash, compare } = bcrypt;
 
 const UserSchema = new Schema({
   username: {
@@ -21,13 +21,18 @@ const UserSchema = new Schema({
     required: true,
   },
   avatar: {
-    type: String, // URL or path
-    default: 'https://www.nationalgeographic.com/animals/mammals/facts/domestic-dog', // Default blank
+    type: String,
+    default: 'https://www.nationalgeographic.com/animals/mammals/facts/domestic-dog',
+  },
+  role: {
+    type: String,
+    enum: ['Student', 'Professional'],
+    required: true,
   },
   projects: [{
     type: Schema.Types.ObjectId,
     ref: 'Project',
-    default: [], // Default empty array
+    default: [],
   }],
   isActive: {
     type: Boolean,
@@ -38,7 +43,7 @@ const UserSchema = new Schema({
     default: false,
   },
 }, {
-  timestamps: true, // Automatically adds createdAt and updatedAt fields
+  timestamps: true,
 });
 
 // Hash password before saving
@@ -60,11 +65,10 @@ UserSchema.methods.generateAccessToken = function() {
             _id: this._id,
             email: this.email,
             username: this.username,
-            // fullName: this.fullName // Ensure fullName is defined or remove if not used
         },
         process.env.ACCESS_TOKEN_SECRET,
         {
-            expiresIn: process.env.ACCESS_TOKEN_EXPIRY // Accessed through process.env
+            expiresIn: process.env.ACCESS_TOKEN_EXPIRY
         }
     );
 };
@@ -77,7 +81,7 @@ UserSchema.methods.generateRefreshToken = function() {
         },
         process.env.REFRESH_TOKEN_SECRET,
         {
-            expiresIn: process.env.REFRESH_TOKEN_EXPIRY // Accessed through process.env
+            expiresIn: process.env.REFRESH_TOKEN_EXPIRY
         }
     );
 };
