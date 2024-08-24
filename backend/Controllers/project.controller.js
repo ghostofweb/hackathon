@@ -1,10 +1,11 @@
-import {Project} from "../Models/project.model";
-import { User } from "../Models/user.model";
-import {nanoid} from "nanoid"
-import asyncHandler from "../Utils/asyncHandler";
-import ApiError from "../Utils/ApiError";
-import uploadOnCloudinary from "../Utils/cloudinary";
-import ApiResponse from "../Utils/ApiResponse";
+import { Project } from '../models/project.model.js';
+import { User } from '../models/user.model.js'; // Make sure to use the correct case
+import { nanoid } from 'nanoid';
+import asyncHandler from '../utils/asyncHandler.js';
+import ApiError from '../utils/ApiError.js';
+import uploadOnCloudinary from '../Utils/cloudinary.js';
+import ApiResponse from '../utils/ApiResponse.js';
+
 
 export const createProject = asyncHandler(async (req,res)=>{
     const {title,description} = req.body;

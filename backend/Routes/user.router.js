@@ -1,6 +1,5 @@
 import express from 'express';
-import {
-    createUser,
+import { createUser,
     loginUser,
     logoutUser,
     refreshAccessToken,
@@ -9,7 +8,8 @@ import {
     updateAccountDetails,
     updateUserAvatar,
 } from '../Controllers/user.controller.js';
-import { verifyJWT } from '../middlewares/authMiddleware.js';
+import { verifyJWT } from '../Middlewares/auth.middlewere.js';
+import { upload } from '../Middlewares/multer.middlewere.js';
 
 const router = express.Router();
 
