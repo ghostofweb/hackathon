@@ -3,6 +3,7 @@ import asyncHandler from "../Utils/asyncHandler.js";
 import ApiError from "../Utils/ApiError.js";
 import uploadOnCloudinary from "../Utils/cloudinary.js";
 
+
 const createUser = asyncHandler(async (req, res) => {
     const { username, password, email, role } = req.body;
 
@@ -86,4 +87,48 @@ const generateAccessAndRefreshTokens = async (userId) => {
     }
 };
 
-export { createUser, generateAccessAndRefreshTokens };
+const loginUser = asyncHandler(async (req, res) => {
+    const { email, username, password } = req.body;
+
+    if (!(email || username)) {
+        throw new ApiError(400, "Username or email is required");
+    }
+
+    const user = await User.findOne({
+        $or: [{ email }, { username }]
+    });
+
+    if (!user) {
+        throw new ApiError(400, "Username or email is incorrect");
+    }
+
+    const isPasswordValid = await user.isPasswordCorrect(password);
+
+    if (!isPasswordValid) {
+        throw new ApiError(401, "Invalid credentials");
+    }
+
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
+
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
+
+    const options = {
+        httpOnly: true, // Makes the cookie accessible only by the server
+        secure: process.env.NODE_ENV === "production", // Only set secure flag in production
+    };
+
+    return res.status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json({
+            status: 200,
+            data: {
+                user: loggedInUser,
+                accessToken,
+                refreshToken
+            },
+            message: "User logged in successfully"
+        });
+});
+
+export { createUser, generateAccessAndRefreshTokens,loginUser };
