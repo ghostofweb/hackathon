@@ -1,6 +1,6 @@
 import express from 'express';
 import { viewFiles, downloadFile, uploadUpdatedFile, requestChangeApproval } from '../Controllers/file.controller.js';
-import upload from '../utils/multer.js'; // Assuming the multer setup is in utils/multer.js
+import { upload } from '../Middlewares/multer.middlewere.js'; // Updated to match capitalized directory
 
 const router = express.Router();
 
