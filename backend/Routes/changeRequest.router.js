@@ -3,7 +3,7 @@ import {
     fetchPendingChangeRequests,
     approveChanges,
     rejectChanges
-} from '../Controllers/changeRequest.controller.js';
+} from '../controllers/changeRequest.controller.js';
 
 const router = express.Router();
 

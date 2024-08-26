@@ -1,21 +1,19 @@
 import { User } from "../models/user.model.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
-import uploadOnCloudinary from "../Utils/cloudinary.js";
-
+import uploadOnCloudinary from "../utils/cloudinary.js";
+import ApiResponse from "../utils/ApiResponse.js";
 
 const createUser = asyncHandler(async (req, res) => {
-    const { username, password, email} = req.body;
-
-    // Check if all required fields are provided
-    if ([email, username, password, role].some((field) => field?.trim() === "")) {
-        throw new ApiError(400, "Please fill all the fields");
+    console.log(req.body); // Log the incoming request body
+    const { username, password, email, role } = req.body;
+    if (!username || !password || !email || !role) {
+        throw new Error('Please fill all the fields');
     }
+
 
     // Validate role
-    if (!['Student', 'Professional'].includes(role)) {
-        throw new ApiError(400, "Invalid role specified");
-    }
+
 
     // Check if the user already exists with the given username or email
     const existedUser = await User.findOne({
@@ -29,24 +27,15 @@ const createUser = asyncHandler(async (req, res) => {
     let avatarUrl = 'https://www.nationalgeographic.com/animals/mammals/facts/domestic-dog'; // Default avatar URL
 
     // If the user uploads an avatar, update the avatarUrl
-    const avatarLocalPath = req.files?.avatar?.[0]?.path;
+    const avatarLocalPath = req.file?.path;
 
-    if (avatarLocalPath) {
-        const avatar = await uploadOnCloudinary(avatarLocalPath);
-
-        if (!avatar) {
-            throw new ApiError(400, "Avatar upload failed");
-        }
-
-        avatarUrl = avatar.url; // Update avatar URL if upload is successful
-    }
 
     // Create new user instance and save
     const user = new User({
         username,
-        email,
         password,
-        avatar: avatarUrl,
+        email,
+        role
     });
 
     await user.save();
@@ -65,7 +54,6 @@ const createUser = asyncHandler(async (req, res) => {
         message: "User registered successfully"
     });
 });
-
 
 const generateAccessAndRefreshTokens = async (userId) => {
     try {
@@ -223,23 +211,32 @@ const getCurrentUser = asyncHandler(async (req,res) => {
 })
 
 
-const updateAccountDetails = asyncHandler(async (req,res) => {
-    const {username,email} = req.user
-    //getting the user details from the auth req.user
-    if(!fullName || email){
-        throw new ApiError(400,"Please fill all the fields")
+const updateAccountDetails = asyncHandler(async (req, res) => {
+    const { username, email } = req.body;
+
+    // Check if at least one field is provided
+    if (!username && !email) {
+        throw new ApiError(400, "Please provide at least one field to update");
     }
-  
+
+    // Build the update object based on provided fields
+    const updateFields = {};
+    if (username) updateFields.username = username;
+    if (email) updateFields.email = email;
+
     const user = await User.findByIdAndUpdate(req.user?._id,
         {
-            $set:{
-                username:username,email:email
-            }
-        },{new:true}
-    ).select("-password")
+            $set: updateFields
+        }, { new: true }
+    ).select("-password");
 
-    return res.status(200).json(new ApiResponse(200,user,"Account details Updated Successfully"))
-})
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    return res.status(200).json(new ApiResponse(200, user, "Account details updated successfully"));
+});
+
 
 const updateUserAvatar = asyncHandler(async(req, res) => {
     const avatarLocalPath = req.file?.path;

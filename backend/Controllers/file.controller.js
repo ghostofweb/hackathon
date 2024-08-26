@@ -1,10 +1,10 @@
-import { File } from '../Models/file.model.js';
+import { File } from '../models/file.model.js';
 import { Project } from '../models/project.model.js';
 import { User } from '../models/user.model.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import ApiError from '../utils/ApiError.js';
-import ApiResponse from '../utils/ApiResponse.js';
-import uploadOnCloudinary from '../Utils/cloudinary.js';
+
+import uploadOnCloudinary from '../utils/cloudinary.js';
 
 // View Files for a Project
 export const viewFiles = asyncHandler(async (req, res) => {

@@ -1,6 +1,6 @@
 import express from 'express';
 import multer from 'multer';
-import { createProject, getAllProjects, getProjectById, updateProjectById, deleteProjectById, addTeamMember, removeTeamMember, joinProject } from '../Controllers/project.controller.js';
+import { createProject, getAllProjects, getProjectById, updateProjectById, deleteProjectById, addTeamMember, removeTeamMember, joinProject } from '../controllers/project.controller.js';
 import { verifyJWT } from '../Middlewares/auth.middlewere.js';
 
 const router = express.Router();

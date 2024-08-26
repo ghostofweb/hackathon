@@ -1,18 +1,20 @@
+// app.js
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 
-// Load environment variables
-dotenv.config();
+import userRouter from './routes/user.router.js';
+import projectRouter from './routes/project.router.js';
+import fileRoutes from './routes/file.router.js';
+import changeRequestRoutes from './routes/changeRequest.router.js';
+
+dotenv.config({ path: './.env' }); // Adjust the path as needed based on your directory structure
+
+
 
 const app = express();
 
-// CORS configuration
-app.use(cors({
-    origin: process.env.CORS_ORIGIN,
-    credentials: true,
-}));
 
 // Middleware
 app.use(express.json({ limit: '16kb' }));
@@ -24,17 +26,20 @@ app.use(cookieParser());
 app.get('/test', (req, res) => {
     res.send('hello world');
 });
-
-// Import routes
-import userRouter from './Routes/user.router.js';
-import projectRouter from './Routes/project.router.js';
-import fileRoutes from './Routes/file.router.js';
-import changeRequestRoutes from './Routes/changeRequest.router.js';
-
-// Routing
+app.use(cors());
+// API Routes
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/projects', projectRouter);
 app.use('/api/files', fileRoutes);
 app.use('/api/v1/change-requests', changeRequestRoutes);
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(err.statusCode || 500).json({
+        message: err.message || 'An unexpected error occurred.',
+        success: false,
+    });
+});
 
 export default app;
